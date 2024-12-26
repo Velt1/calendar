@@ -1,6 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card } from "../ui/card";
-import { Button } from "../ui/button";
 import { Calendar } from "../ui/calendar";
 import {
   Select,
@@ -10,13 +9,21 @@ import {
   SelectValue,
 } from "../ui/select";
 import TimeSlotGrid from "./TimeSlotGrid";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import BookingForm from "./BookingForm";
+
+interface BookingFormData {
+  name: string;
+  email: string;
+  purpose: string;
+}
 
 interface MonthlyCalendarProps {
   selectedDate?: Date;
   onDateSelect?: (date: Date) => void;
   timeZone?: string;
   onTimeZoneChange?: (timeZone: string) => void;
+  onTimeSlotSelect?: (time: string) => void;
+  onBookingSubmit?: (data: BookingFormData) => void;
 }
 
 const timeZones = [
@@ -33,19 +40,16 @@ const MonthlyCalendar: React.FC<MonthlyCalendarProps> = ({
   onDateSelect = () => {},
   timeZone = "America/New_York",
   onTimeZoneChange = () => {},
+  onTimeSlotSelect = () => {},
+  onBookingSubmit = () => {},
 }) => {
-  const [currentMonth, setCurrentMonth] = React.useState(selectedDate);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [showBookingForm, setShowBookingForm] = useState(false);
 
-  const handlePreviousMonth = () => {
-    setCurrentMonth(
-      new Date(currentMonth.setMonth(currentMonth.getMonth() - 1)),
-    );
-  };
-
-  const handleNextMonth = () => {
-    setCurrentMonth(
-      new Date(currentMonth.setMonth(currentMonth.getMonth() + 1)),
-    );
+  const handleTimeSlotSelect = (time: string) => {
+    setSelectedTime(time);
+    setShowBookingForm(true);
+    onTimeSlotSelect(time);
   };
 
   return (
@@ -71,24 +75,6 @@ const MonthlyCalendar: React.FC<MonthlyCalendarProps> = ({
 
         <div className="flex gap-6">
           <div className="w-[350px]">
-            <div className="flex items-center justify-between mb-4">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handlePreviousMonth}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <span className="text-lg font-medium">
-                {currentMonth.toLocaleString("default", {
-                  month: "long",
-                  year: "numeric",
-                })}
-              </span>
-              <Button variant="outline" size="icon" onClick={handleNextMonth}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
             <Calendar
               mode="single"
               selected={selectedDate}
@@ -98,10 +84,22 @@ const MonthlyCalendar: React.FC<MonthlyCalendarProps> = ({
           </div>
 
           <div className="flex-1">
-            <TimeSlotGrid
-              selectedDate={selectedDate}
-              onSlotSelect={(slot) => console.log("Selected slot:", slot)}
-            />
+            {!showBookingForm ? (
+              <TimeSlotGrid
+                selectedDate={selectedDate}
+                onSlotSelect={handleTimeSlotSelect}
+              />
+            ) : (
+              <BookingForm
+                selectedDate={selectedDate}
+                selectedTime={selectedTime || ""}
+                onSubmit={(data) => {
+                  setShowBookingForm(false);
+                  setSelectedTime(null);
+                  onBookingSubmit(data);
+                }}
+              />
+            )}
           </div>
         </div>
       </div>

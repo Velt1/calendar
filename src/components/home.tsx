@@ -1,34 +1,38 @@
 import React, { useState } from "react";
 import MonthlyCalendar from "./calendar/MonthlyCalendar";
-import BookingForm from "./calendar/BookingForm";
 import ConfirmationDialog from "./calendar/ConfirmationDialog";
-
-interface TimeSlot {
-  time: string;
-  available: boolean;
-  bookedBy?: string;
-}
 
 const Home = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(
-    null,
-  );
-  const [showBookingForm, setShowBookingForm] = useState(false);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [timeZone, setTimeZone] = useState("America/New_York");
+  const [bookingDetails, setBookingDetails] = useState({
+    clientName: "",
+    clientEmail: "",
+    meetingPurpose: "",
+    dateTime: new Date(),
+  });
 
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date);
   };
 
-  const handleTimeSlotSelect = (slot: TimeSlot) => {
-    setSelectedTimeSlot(slot);
-    setShowBookingForm(true);
+  const handleTimeSlotSelect = (time: string) => {
+    setSelectedTimeSlot(time);
   };
 
-  const handleBookingSubmit = () => {
-    setShowBookingForm(false);
+  const handleBookingSubmit = (data: {
+    name: string;
+    email: string;
+    purpose: string;
+  }) => {
+    setBookingDetails({
+      clientName: data.name,
+      clientEmail: data.email,
+      meetingPurpose: data.purpose,
+      dateTime: selectedDate,
+    });
     setShowConfirmation(true);
   };
 
@@ -50,27 +54,14 @@ const Home = () => {
             onDateSelect={handleDateSelect}
             timeZone={timeZone}
             onTimeZoneChange={setTimeZone}
+            onTimeSlotSelect={handleTimeSlotSelect}
+            onBookingSubmit={handleBookingSubmit}
           />
-
-          {showBookingForm && selectedTimeSlot && (
-            <div className="flex justify-center">
-              <BookingForm
-                selectedDate={selectedDate}
-                selectedTime={selectedTimeSlot.time}
-                onSubmit={handleBookingSubmit}
-              />
-            </div>
-          )}
 
           <ConfirmationDialog
             open={showConfirmation}
             onClose={() => setShowConfirmation(false)}
-            bookingDetails={{
-              clientName: "John Doe",
-              clientEmail: "john.doe@example.com",
-              meetingPurpose: "Initial Consultation",
-              dateTime: selectedDate,
-            }}
+            bookingDetails={bookingDetails}
           />
         </div>
       </div>

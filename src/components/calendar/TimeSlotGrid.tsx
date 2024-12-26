@@ -17,7 +17,7 @@ interface TimeSlot {
 
 interface TimeSlotGridProps {
   slots?: TimeSlot[];
-  onSlotSelect?: (slot: TimeSlot) => void;
+  onSlotSelect?: (time: string) => void;
   selectedDate?: Date;
 }
 
@@ -59,7 +59,7 @@ const TimeSlotGrid: React.FC<TimeSlotGridProps> = ({
                       ? "hover:bg-primary/10"
                       : "opacity-50 cursor-not-allowed",
                   )}
-                  onClick={() => slot.available && onSlotSelect(slot)}
+                  onClick={() => slot.available && onSlotSelect(slot.time)}
                   disabled={!slot.available}
                 >
                   <span className="text-lg font-medium">{slot.time}</span>
