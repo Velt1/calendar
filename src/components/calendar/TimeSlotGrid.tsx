@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card } from "../ui/card";
 import { Button } from "../ui/button";
 import {
@@ -8,6 +8,7 @@ import {
   TooltipTrigger,
 } from "../ui/tooltip";
 import { cn } from "@/lib/utils";
+import { getBookingsForDate } from "@/lib/supabase";
 
 interface TimeSlot {
   time: string;
@@ -19,25 +20,70 @@ interface TimeSlotGridProps {
   slots?: TimeSlot[];
   onSlotSelect?: (time: string) => void;
   selectedDate?: Date;
+  timeZone?: string;
 }
 
-const defaultSlots: TimeSlot[] = [
-  { time: "9:00 AM", available: true },
-  { time: "10:00 AM", available: false, bookedBy: "John Doe" },
-  { time: "11:00 AM", available: true },
-  { time: "12:00 PM", available: true },
-  { time: "1:00 PM", available: false, bookedBy: "Jane Smith" },
-  { time: "2:00 PM", available: true },
-  { time: "3:00 PM", available: true },
-  { time: "4:00 PM", available: false, bookedBy: "Mike Johnson" },
-  { time: "5:00 PM", available: true },
-];
+const generateTimeSlots = (timeZone: string): TimeSlot[] => {
+  const slots: TimeSlot[] = [];
+  const date = new Date();
+
+  // Set to 9 AM in the specified timezone
+  date.setHours(9, 0, 0, 0);
+
+  // Create slots from 9 AM to 5 PM
+  for (let i = 0; i < 9; i++) {
+    const timeString = new Date(
+      date.getTime() + i * 60 * 60 * 1000,
+    ).toLocaleTimeString("default", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      timeZone,
+    });
+
+    slots.push({
+      time: timeString,
+      available: true,
+    });
+  }
+
+  return slots;
+};
 
 const TimeSlotGrid: React.FC<TimeSlotGridProps> = ({
-  slots = defaultSlots,
   onSlotSelect = () => {},
   selectedDate = new Date(),
+  timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone,
 }) => {
+  const [slots, setSlots] = useState<TimeSlot[]>(() =>
+    generateTimeSlots(timeZone),
+  );
+
+  useEffect(() => {
+    setSlots(generateTimeSlots(timeZone));
+  }, [timeZone]);
+
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const bookings = await getBookingsForDate(selectedDate, timeZone);
+        const updatedSlots = slots.map((slot) => {
+          const booking = bookings.find((b) => b.meeting_time === slot.time);
+          return {
+            ...slot,
+            available: !booking,
+            bookedBy: booking ? booking.client_name : undefined,
+          };
+        });
+        setSlots(updatedSlots);
+      } catch (error) {
+        console.error("Error fetching bookings:", error);
+      }
+    };
+
+    fetchBookings();
+  }, [selectedDate, timeZone]);
+
   return (
     <Card className="p-6 bg-white w-full max-w-[1100px] h-[600px] overflow-y-auto">
       <div className="mb-4">

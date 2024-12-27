@@ -1,12 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import MonthlyCalendar from "./calendar/MonthlyCalendar";
 import ConfirmationDialog from "./calendar/ConfirmationDialog";
+import { createBooking } from "@/lib/supabase";
 
 const Home = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [timeZone, setTimeZone] = useState("America/New_York");
+  const [timeZone, setTimeZone] = useState(
+    Intl.DateTimeFormat().resolvedOptions().timeZone,
+  );
   const [bookingDetails, setBookingDetails] = useState({
     clientName: "",
     clientEmail: "",
@@ -22,18 +25,37 @@ const Home = () => {
     setSelectedTimeSlot(time);
   };
 
-  const handleBookingSubmit = (data: {
+  const handleBookingSubmit = async (data: {
     name: string;
     email: string;
     purpose: string;
   }) => {
-    setBookingDetails({
-      clientName: data.name,
-      clientEmail: data.email,
-      meetingPurpose: data.purpose,
-      dateTime: selectedDate,
-    });
-    setShowConfirmation(true);
+    try {
+      // Parse the time string (e.g., "13:00")
+      const [hours, minutes] = selectedTimeSlot?.split(":") || ["0", "0"];
+      const dateTime = new Date(selectedDate);
+      dateTime.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+
+      await createBooking({
+        clientName: data.name,
+        clientEmail: data.email,
+        meetingPurpose: data.purpose,
+        meetingDate: selectedDate,
+        meetingTime: selectedTimeSlot || "",
+        timezone: timeZone,
+      });
+
+      setBookingDetails({
+        clientName: data.name,
+        clientEmail: data.email,
+        meetingPurpose: data.purpose,
+        dateTime: dateTime, // Use the dateTime with correct hours and minutes
+      });
+      setShowConfirmation(true);
+    } catch (error) {
+      console.error("Error creating booking:", error);
+      alert("Failed to create booking. Please try again.");
+    }
   };
 
   return (

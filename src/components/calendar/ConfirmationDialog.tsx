@@ -70,8 +70,9 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
               <h3 className="font-medium">Time</h3>
               <p className="text-sm text-muted-foreground">
                 {bookingDetails.dateTime.toLocaleTimeString("en-US", {
-                  hour: "numeric",
+                  hour: "2-digit",
                   minute: "2-digit",
+                  hour12: false,
                 })}
               </p>
             </div>

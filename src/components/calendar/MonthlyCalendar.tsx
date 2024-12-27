@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card } from "../ui/card";
 import { Calendar } from "../ui/calendar";
 import {
@@ -26,19 +26,12 @@ interface MonthlyCalendarProps {
   onBookingSubmit?: (data: BookingFormData) => void;
 }
 
-const timeZones = [
-  "America/New_York",
-  "America/Los_Angeles",
-  "America/Chicago",
-  "Europe/London",
-  "Asia/Tokyo",
-  "Australia/Sydney",
-];
+const timeZones = Intl.supportedValuesOf("timeZone");
 
 const MonthlyCalendar: React.FC<MonthlyCalendarProps> = ({
   selectedDate = new Date(),
   onDateSelect = () => {},
-  timeZone = "America/New_York",
+  timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone,
   onTimeZoneChange = () => {},
   onTimeSlotSelect = () => {},
   onBookingSubmit = () => {},
@@ -50,6 +43,11 @@ const MonthlyCalendar: React.FC<MonthlyCalendarProps> = ({
     setSelectedTime(time);
     setShowBookingForm(true);
     onTimeSlotSelect(time);
+  };
+
+  const handleCancel = () => {
+    setShowBookingForm(false);
+    setSelectedTime(null);
   };
 
   return (
@@ -87,6 +85,7 @@ const MonthlyCalendar: React.FC<MonthlyCalendarProps> = ({
             {!showBookingForm ? (
               <TimeSlotGrid
                 selectedDate={selectedDate}
+                timeZone={timeZone}
                 onSlotSelect={handleTimeSlotSelect}
               />
             ) : (
@@ -98,6 +97,7 @@ const MonthlyCalendar: React.FC<MonthlyCalendarProps> = ({
                   setSelectedTime(null);
                   onBookingSubmit(data);
                 }}
+                onCancel={handleCancel}
               />
             )}
           </div>

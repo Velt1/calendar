@@ -15,6 +15,7 @@ import {
 
 interface BookingFormProps {
   onSubmit?: (data: BookingFormData) => void;
+  onCancel?: () => void;
   isLoading?: boolean;
   selectedTime?: string;
   selectedDate?: Date;
@@ -28,8 +29,9 @@ interface BookingFormData {
 
 const BookingForm: React.FC<BookingFormProps> = ({
   onSubmit = () => {},
+  onCancel = () => {},
   isLoading = false,
-  selectedTime = "10:00 AM",
+  selectedTime = "10:00",
   selectedDate = new Date(),
 }) => {
   const form = useForm<BookingFormData>({
@@ -105,9 +107,19 @@ const BookingForm: React.FC<BookingFormProps> = ({
             )}
           />
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Booking..." : "Confirm Booking"}
-          </Button>
+          <div className="flex gap-4 justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={isLoading}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Booking..." : "Confirm Booking"}
+            </Button>
+          </div>
         </form>
       </Form>
     </Card>
